@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Review - Campus Resource Hub{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('resources.detail', resource_id=review.resource_id) }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Resource
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h1 class="mb-4">Edit Your Review</h1>
+        
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('reviews.edit', review_id=review.id) }}">
+                    <div class="mb-4">
+                        <label class="form-label">Rating <span class="text-danger">*</span></label>
+                        <div class="rating-input">
+                            <input type="hidden" name="rating" id="rating" value="{{ review.rating }}" required>
+                            <div class="d-flex gap-2" id="starRating">
+                                {% for i in range(5, 0, -1) %}
+                                <i class="bi bi-star{{ '-fill' if i <= review.rating else '' }} {{ 'text-warning' if i <= review.rating else 'text-muted' }}" 
+                                   style="font-size: 2rem; cursor: pointer;" 
+                                   data-rating="{{ i }}"
+                                   onmouseover="highlightStars({{ i }})"
+                                   onmouseout="resetStars()"
+                                   onclick="setRating({{ i }})"></i>
+                                {% endfor %}
+                            </div>
+                            <p class="text-muted mt-2">Click on a star to rate (1-5 stars)</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="comment" class="form-label">Your Review <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="comment" name="comment" rows="5" required>{{ review.comment }}</textarea>
+                        <small class="form-text text-muted">Tell others about your experience using this resource.</small>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('resources.detail', resource_id=review.resource_id) }}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Update Review</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentRating = {{ review.rating }};
+
+function highlightStars(rating) {
+    const stars = document.querySelectorAll('#starRating i');
+    stars.forEach((star, index) => {
+        const starRating = parseInt(star.dataset.rating);
+        if (starRating <= rating) {
+            star.classList.add('text-warning');
+            star.classList.remove('text-muted');
+            star.classList.add('bi-star-fill');
+            star.classList.remove('bi-star');
+        } else {
+            star.classList.remove('text-warning');
+            star.classList.add('text-muted');
+            star.classList.remove('bi-star-fill');
+            star.classList.add('bi-star');
+        }
+    });
+}
+
+function resetStars() {
+    highlightStars(currentRating);
+}
+
+function setRating(rating) {
+    currentRating = rating;
+    document.getElementById('rating').value = rating;
+    highlightStars(rating);
+}
+
+// Initialize
+highlightStars(currentRating);
+</script>
+{% endblock %}
+

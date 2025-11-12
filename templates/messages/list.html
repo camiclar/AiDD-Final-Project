@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Messages - Campus Resource Hub{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h1 class="mb-2">Messages</h1>
+    <p class="text-muted">Communicate about your bookings and resources</p>
+</div>
+
+{% if threads %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="list-group">
+            {% for thread in threads %}
+            <a href="{{ url_for('messages.view_thread', thread_id=thread.thread_id) }}" 
+               class="list-group-item list-group-item-action {% if thread.unread_count > 0 %}list-group-item-primary{% endif %}">
+                <div class="d-flex w-100 justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <h5 class="mb-1">
+                            {% if thread.resource %}
+                            {{ thread.resource.title }}
+                            {% elif thread.other_user %}
+                            {{ thread.other_user.name }}
+                            {% else %}
+                            Conversation
+                            {% endif %}
+                            {% if thread.unread_count > 0 %}
+                            <span class="badge bg-primary rounded-pill">{{ thread.unread_count }}</span>
+                            {% endif %}
+                        </h5>
+                        <p class="mb-1 text-muted">
+                            {% if thread.last_message.sender_id == current_user.id %}
+                            <strong>You:</strong> 
+                            {% else %}
+                            <strong>{{ thread.other_user.name if thread.other_user else 'User' }}:</strong>
+                            {% endif %}
+                            {{ thread.last_message.content[:100] }}{% if thread.last_message.content|length > 100 %}...{% endif %}
+                        </p>
+                        <small class="text-muted">{{ thread.last_message.created_at.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                    </div>
+                    {% if thread.unread_count > 0 %}
+                    <span class="badge bg-primary rounded-pill">{{ thread.unread_count }} new</span>
+                    {% endif %}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="bi bi-chat-left-text" style="font-size: 4rem; color: #ccc;"></i>
+    <p class="text-muted mt-3">No messages yet</p>
+    <p class="text-muted">Start a conversation by clicking "Contact Owner" on a resource page</p>
+</div>
+{% endif %}
+{% endblock %}
+

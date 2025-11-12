@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Resources - Campus Resource Hub{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-2">Browse Resources</h1>
+        <p class="text-muted">
+            {{ resources|length }} {{ 'resource' if resources|length == 1 else 'resources' }} available
+        </p>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if current_user.is_authenticated and (current_user.is_staff() or current_user.is_admin()) %}
+        <a href="{{ url_for('resources.create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Create Resource
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('resources.browse') }}" class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ search }}" placeholder="Search resources...">
+            </div>
+            <div class="col-md-3">
+                <label for="category" class="form-label">Category</label>
+                <select class="form-select" id="category" name="category">
+                    {% for cat in categories %}
+                    <option value="{{ cat.value }}" {% if category == cat.value %}selected{% endif %}>
+                        {{ cat.label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="sort" class="form-label">Sort By</label>
+                <select class="form-select" id="sort" name="sort">
+                    <option value="recent" {% if sort_by == 'recent' %}selected{% endif %}>Most Recent</option>
+                    <option value="rating" {% if sort_by == 'rating' %}selected{% endif %}>Top Rated</option>
+                    <option value="popular" {% if sort_by == 'popular' %}selected{% endif %}>Most Booked</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Filter
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Resources Grid -->
+{% if resources %}
+<div class="row g-4">
+    {% for item in resources %}
+    {% set resource = item.resource %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm">
+            <!-- Resource Image -->
+            {% set images = resource.images.all() %}
+            {% if images %}
+            <img src="{{ images[0].image_url }}" class="card-img-top" alt="{{ resource.title }}" 
+                 style="height: 200px; object-fit: cover;">
+            {% else %}
+            <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" 
+                 style="height: 200px;">
+                <i class="bi bi-image text-white" style="font-size: 3rem;"></i>
+            </div>
+            {% endif %}
+            
+            <!-- Category Badge and Top Rated Badge -->
+            <div class="position-absolute top-0 end-0 m-2 d-flex flex-column gap-1 align-items-end">
+                {% if item.rating >= 4.5 and item.review_count >= 3 %}
+                <span class="badge bg-warning text-dark">
+                    <i class="bi bi-trophy"></i> Top Rated
+                </span>
+                {% endif %}
+                {% set category_labels = {
+                    'study-room': 'Study Room',
+                    'lab-equipment': 'Lab Equipment',
+                    'event-space': 'Event Space',
+                    'av-equipment': 'AV Equipment',
+                    'tutoring': 'Tutoring',
+                    'other': 'Other'
+                } %}
+                {% set category_colors = {
+                    'study-room': 'bg-primary',
+                    'lab-equipment': 'bg-info',
+                    'event-space': 'bg-success',
+                    'av-equipment': 'bg-warning',
+                    'tutoring': 'bg-danger',
+                    'other': 'bg-secondary'
+                } %}
+                <span class="badge {{ category_colors.get(resource.category, 'bg-secondary') }}">
+                    {{ category_labels.get(resource.category, 'Other') }}
+                </span>
+            </div>
+            
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">{{ resource.title }}</h5>
+                <p class="card-text text-muted small" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                    {{ resource.description }}
+                </p>
+                
+                <div class="mt-auto">
+                    <div class="mb-2">
+                        <small class="text-muted">
+                            <i class="bi bi-geo-alt"></i> {{ resource.location }}
+                        </small>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">
+                            <i class="bi bi-people"></i> Capacity: {{ resource.capacity }}
+                        </small>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            {% if item.rating > 0 %}
+                            <i class="bi bi-star-fill text-warning"></i>
+                            <small class="text-muted">
+                                <strong>{{ item.rating }}</strong> ({{ item.review_count }} review{{ 's' if item.review_count != 1 else '' }})
+                            </small>
+                            {% else %}
+                            <small class="text-muted">
+                                <i class="bi bi-star"></i> No reviews yet
+                            </small>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <small class="text-muted">
+                                <i class="bi bi-calendar"></i> {{ item.booking_count }} booking{{ 's' if item.booking_count != 1 else '' }}
+                            </small>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('resources.detail', resource_id=resource.id) }}" class="btn btn-primary w-100">
+                        View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
+    <p class="text-muted mt-3">No resources found matching your criteria</p>
+    <a href="{{ url_for('resources.browse') }}" class="btn btn-outline-primary">Clear filters</a>
+</div>
+{% endif %}
+{% endblock %}
+

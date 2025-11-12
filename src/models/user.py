@@ -1,10 +1,11 @@
 """User model for the Campus Resource Hub."""
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin
 from src.database import db
 
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     """User model representing students, staff, and admins."""
     
     __tablename__ = 'users'

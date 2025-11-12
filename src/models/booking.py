@@ -19,6 +19,8 @@ class Booking(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     
+    # Relationships (backref is defined in Resource model)
+    
     def __repr__(self):
         return f'<Booking {self.id}>'
 

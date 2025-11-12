@@ -10,7 +10,7 @@ class Notification(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
-    type = db.Column(db.String(50), nullable=False)  # booking_confirmed, booking_pending, booking_approved, booking_rejected, new_message, review_received
+    type = db.Column(db.String(50), nullable=False)  # booking_confirmed, booking_pending, booking_approved, booking_rejected, booking_cancelled, new_message, review_received
     title = db.Column(db.String(255), nullable=False)
     message = db.Column(db.Text, nullable=False)
     read = db.Column(db.Boolean, default=False, nullable=False)

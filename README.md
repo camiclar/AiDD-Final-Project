@@ -62,6 +62,25 @@ A full-stack web application that enables university departments, student organi
 
 The database is located at `instance/campus_resource_hub.db` and is included in the repository for this school project. The database will be automatically created with all tables on first run of the application.
 
+### Populating Dummy Data
+
+To populate the database with test data (users, resources, bookings, etc.), run:
+
+```bash
+python populate_dummy_data.py
+```
+
+This will create:
+- 6 users (1 admin, 2 staff, 3 students)
+- 6 resources (study rooms, lab equipment, event spaces, etc.)
+- 4 bookings
+- 4 reviews
+- Sample messages
+
+**Test credentials are available in `TEST_CREDENTIALS.md`**
+
+**Note:** Running this script will clear all existing data in the database!
+
 ## Development Notes
 
 This project follows MVC architecture:

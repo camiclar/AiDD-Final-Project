@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Create Resource - Campus Resource Hub{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('resources.browse') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Browse
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h1 class="mb-4">Create New Resource</h1>
+        
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('resources.create') }}">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Resource Title <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="title" name="title" required
+                               placeholder="e.g., Library Study Room A">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="description" name="description" rows="4" required
+                                  placeholder="Describe the resource, its features, and any requirements..."></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="category" class="form-label">Category <span class="text-danger">*</span></label>
+                            <select class="form-select" id="category" name="category" required>
+                                {% for cat in categories %}
+                                <option value="{{ cat.value }}">{{ cat.label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="capacity" class="form-label">Capacity <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="capacity" name="capacity" 
+                                   min="1" value="1" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="location" class="form-label">Location <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="location" name="location" required
+                               placeholder="e.g., Library Building, 3rd Floor, Room 301">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="availability_rules" class="form-label">Availability Rules <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="availability_rules" name="availability_rules" required
+                               placeholder="e.g., Mon-Fri 8AM-10PM, Sat-Sun 10AM-6PM">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="equipment" class="form-label">Equipment & Amenities (Optional)</label>
+                        <input type="text" class="form-control" id="equipment" name="equipment"
+                               placeholder="Separate items with commas (e.g., Whiteboard, Projector, WiFi)">
+                        <small class="form-text text-muted">Separate each item with a comma</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Resource Images (Optional)</label>
+                        <div id="imageInputs">
+                            <div class="input-group mb-2">
+                                <input type="url" class="form-control" name="image_urls[]" 
+                                       placeholder="Enter image URL from Unsplash, Pexels, etc.">
+                                <button type="button" class="btn btn-outline-danger" onclick="removeImageInput(this)">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addImageInput()">
+                            <i class="bi bi-plus"></i> Add Another Image
+                        </button>
+                        <small class="form-text text-muted d-block mt-2">
+                            Add image URLs to showcase your resource. Leave blank to use a default image.
+                        </small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="requires_approval" name="requires_approval">
+                            <label class="form-check-label" for="requires_approval">
+                                Require Approval
+                            </label>
+                        </div>
+                        <small class="form-text text-muted">
+                            Bookings will need your approval before confirmation
+                        </small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="draft">Draft</option>
+                            <option value="published">Published</option>
+                        </select>
+                        <small class="form-text text-muted">
+                            Draft resources are only visible to you. Published resources are visible to everyone.
+                        </small>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('resources.browse') }}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Create Resource</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function addImageInput() {
+    const container = document.getElementById('imageInputs');
+    const div = document.createElement('div');
+    div.className = 'input-group mb-2';
+    div.innerHTML = `
+        <input type="url" class="form-control" name="image_urls[]" 
+               placeholder="Enter image URL from Unsplash, Pexels, etc.">
+        <button type="button" class="btn btn-outline-danger" onclick="removeImageInput(this)">
+            <i class="bi bi-x"></i>
+        </button>
+    `;
+    container.appendChild(div);
+}
+
+function removeImageInput(btn) {
+    btn.closest('.input-group').remove();
+}
+</script>
+{% endblock %}
+

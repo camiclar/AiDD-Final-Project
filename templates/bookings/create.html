@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+
+{% block title %}Book {{ resource.title }} - Campus Resource Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .time-slot {
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .time-slot:hover {
+        background-color: #f0f0f0;
+    }
+    .time-slot.selected {
+        background-color: #0d6efd;
+        color: white;
+    }
+    .time-slot.disabled {
+        background-color: #e9ecef;
+        color: #6c757d;
+        cursor: not-allowed;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('resources.detail', resource_id=resource.id) }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Resource
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <h1 class="mb-4">Book {{ resource.title }}</h1>
+        
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('bookings.create', resource_id=resource.id) }}" id="bookingForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="date" class="form-label">Select Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="date" name="date" required>
+                            <small class="form-text text-muted">Select a date for your booking</small>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="start_time" class="form-label">Start Time <span class="text-danger">*</span></label>
+                            <input type="time" class="form-control" id="start_time" name="start_time" 
+                                   step="1800" required>
+                            <small class="form-text text-muted">Select start time (30-minute intervals)</small>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="end_time" class="form-label">End Time <span class="text-danger">*</span></label>
+                            <input type="time" class="form-control" id="end_time" name="end_time" 
+                                   step="1800" required>
+                            <small class="form-text text-muted">Select end time (30-minute intervals)</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="recurrence" class="form-label">Recurrence (Optional)</label>
+                        <select class="form-select" id="recurrence" name="recurrence">
+                            <option value="none">No recurrence</option>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                        </select>
+                        <small class="form-text text-muted">Repeat this booking daily or weekly</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"
+                                  placeholder="Add any special requests or information..."></textarea>
+                    </div>
+                    
+                    {% if resource.requires_approval %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Approval Required:</strong> This booking requires approval from {{ resource.owner.name }}. 
+                        You'll be notified once it's reviewed.
+                    </div>
+                    {% endif %}
+                    
+                    <div id="conflictWarning" class="alert alert-danger d-none">
+                        <i class="bi bi-x-circle"></i>
+                        <strong>Time Conflict:</strong> This time slot conflicts with an existing booking. 
+                        Please choose another time.
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('resources.detail', resource_id=resource.id) }}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            {% if resource.requires_approval %}
+                            <i class="bi bi-send"></i> Submit Request
+                            {% else %}
+                            <i class="bi bi-check-circle"></i> Confirm Booking
+                            {% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Resource Information</h5>
+            </div>
+            <div class="card-body">
+                <h6>{{ resource.title }}</h6>
+                <p class="text-muted small mb-2">{{ resource.location }}</p>
+                <p class="text-muted small mb-0">
+                    <i class="bi bi-people"></i> Capacity: {{ resource.capacity }}<br>
+                    {% if resource.availability_rules %}
+                    <i class="bi bi-clock"></i> {{ resource.availability_rules }}
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        
+        {% if existing_bookings %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">Existing Bookings</h6>
+            </div>
+            <div class="card-body">
+                <small class="text-muted">This resource has the following upcoming bookings:</small>
+                <ul class="list-unstyled mt-2 mb-0">
+                    {% for booking in existing_bookings[:5] %}
+                    <li class="small mb-2">
+                        <i class="bi bi-calendar"></i> 
+                        {{ booking.start_time.strftime('%b %d, %Y') }}<br>
+                        <i class="bi bi-clock"></i> 
+                        {{ booking.start_time.strftime('%I:%M %p') }} - {{ booking.end_time.strftime('%I:%M %p') }}
+                        <span class="badge bg-{{ 'success' if booking.status == 'approved' else 'warning' }} ms-2">
+                            {{ booking.status }}
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('date');
+    const startTimeInput = document.getElementById('start_time');
+    const endTimeInput = document.getElementById('end_time');
+    const conflictWarning = document.getElementById('conflictWarning');
+    const submitBtn = document.getElementById('submitBtn');
+    const form = document.getElementById('bookingForm');
+    
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.setAttribute('min', today);
+    
+    // Set default times
+    const now = new Date();
+    const nextHour = new Date(now.getTime() + 60 * 60 * 1000);
+    const roundedNextHour = new Date(nextHour);
+    roundedNextHour.setMinutes(Math.ceil(roundedNextHour.getMinutes() / 30) * 30);
+    roundedNextHour.setSeconds(0);
+    
+    const startTime = roundedNextHour.toTimeString().slice(0, 5);
+    const endTime = new Date(roundedNextHour.getTime() + 60 * 60 * 1000).toTimeString().slice(0, 5);
+    
+    startTimeInput.value = startTime;
+    endTimeInput.value = endTime;
+    
+    // Validate end time is after start time
+    function validateTimes() {
+        const start = startTimeInput.value;
+        const end = endTimeInput.value;
+        
+        if (start && end && start >= end) {
+            endTimeInput.setCustomValidity('End time must be after start time');
+            return false;
+        } else {
+            endTimeInput.setCustomValidity('');
+            return true;
+        }
+    }
+    
+    startTimeInput.addEventListener('change', validateTimes);
+    endTimeInput.addEventListener('change', validateTimes);
+    
+    // Check for conflicts when form is submitted
+    form.addEventListener('submit', function(e) {
+        if (!validateTimes()) {
+            e.preventDefault();
+            return false;
+        }
+        
+        const date = dateInput.value;
+        const startTime = startTimeInput.value;
+        const endTime = endTimeInput.value;
+        
+        if (!date || !startTime || !endTime) {
+            return true; // Let HTML5 validation handle it
+        }
+        
+        e.preventDefault(); // Always prevent default to check conflicts first
+        
+        // Check conflict via API
+        fetch('{{ url_for("bookings.check_conflict_api") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                resource_id: {{ resource.id }},
+                date: date,
+                start_time: startTime,
+                end_time: endTime
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Check for resource conflicts (other users)
+            if (data.has_resource_conflict) {
+                conflictWarning.classList.remove('d-none');
+                conflictWarning.innerHTML = '<i class="bi bi-x-circle"></i> <strong>Time Conflict:</strong> This time slot conflicts with an existing booking. Please choose another time.';
+                submitBtn.disabled = true;
+                return;
+            } else {
+                conflictWarning.classList.add('d-none');
+            }
+            
+            // Check for user's own booking conflicts
+            if (data.has_user_conflict && data.user_conflicting_bookings && data.user_conflicting_bookings.length > 0) {
+                showUserConflictModal(data.user_conflicting_bookings, date, startTime, endTime);
+            } else {
+                // No conflicts, proceed with booking
+                form.submit();
+            }
+        })
+        .catch(error => {
+            console.error('Error checking conflict:', error);
+            // Continue with submission if API fails
+            form.submit();
+        });
+    });
+    
+    function showUserConflictModal(conflictingBookings, date, startTime, endTime) {
+        const modal = document.getElementById('userConflictModal');
+        const conflictList = document.getElementById('conflictBookingList');
+        const proceedBtn = document.getElementById('proceedWithBothBtn');
+        const cancelNewBtn = document.getElementById('cancelNewBookingBtn');
+        const cancelOldBtn = document.getElementById('cancelOldBookingBtn');
+        
+        // Build conflict list
+        conflictList.innerHTML = '';
+        conflictingBookings.forEach(booking => {
+            const startDate = new Date(booking.start_time);
+            const endDate = new Date(booking.end_time);
+            const li = document.createElement('li');
+            li.className = 'list-group-item';
+            li.innerHTML = `
+                <strong>${booking.resource_title}</strong><br>
+                <small class="text-muted">
+                    <i class="bi bi-calendar"></i> ${startDate.toLocaleDateString()}<br>
+                    <i class="bi bi-clock"></i> ${startDate.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})} - ${endDate.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}<br>
+                    <i class="bi bi-geo-alt"></i> ${booking.location}
+                </small>
+            `;
+            conflictList.appendChild(li);
+        });
+        
+        // Store conflict data for button handlers
+        modal.dataset.conflictingIds = conflictingBookings.map(b => b.id).join(',');
+        modal.dataset.date = date;
+        modal.dataset.startTime = startTime;
+        modal.dataset.endTime = endTime;
+        
+        // Show modal
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+    }
+    
+    // Handle modal button clicks
+    document.getElementById('proceedWithBothBtn')?.addEventListener('click', function() {
+        document.getElementById('bookingForm').submit();
+    });
+    
+    document.getElementById('cancelNewBookingBtn')?.addEventListener('click', function() {
+        // Just close modal, don't submit
+        const modal = bootstrap.Modal.getInstance(document.getElementById('userConflictModal'));
+        modal.hide();
+    });
+    
+    document.getElementById('cancelOldBookingBtn')?.addEventListener('click', function() {
+        const modal = document.getElementById('userConflictModal');
+        const conflictingIds = modal.dataset.conflictingIds.split(',');
+        
+        // Cancel old bookings
+        Promise.all(conflictingIds.map(id => {
+            return fetch(`{{ url_for('bookings.cancel', booking_id=0) }}`.replace('0', id), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json());
+        }))
+        .then(results => {
+            // Check if all cancellations were successful
+            const allSuccess = results.every(r => r.success !== false);
+            if (allSuccess) {
+                // After cancelling old bookings, proceed with new booking
+                const modalInstance = bootstrap.Modal.getInstance(document.getElementById('userConflictModal'));
+                modalInstance.hide();
+                document.getElementById('bookingForm').submit();
+            } else {
+                alert('Error cancelling some bookings. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error cancelling old bookings:', error);
+            alert('Error cancelling old bookings. Please try again.');
+        });
+    });
+});
+</script>
+
+<!-- User Conflict Modal -->
+<div class="modal fade" id="userConflictModal" tabindex="-1" aria-labelledby="userConflictModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title" id="userConflictModalLabel">
+                    <i class="bi bi-exclamation-triangle"></i> Booking Conflict Detected
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>You already have a booking that overlaps with this time slot:</p>
+                <ul class="list-group" id="conflictBookingList">
+                    <!-- Populated by JavaScript -->
+                </ul>
+                <p class="mt-3 mb-0">What would you like to do?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelNewBookingBtn" data-bs-dismiss="modal">
+                    Cancel This Booking
+                </button>
+                <button type="button" class="btn btn-warning" id="cancelOldBookingBtn">
+                    Cancel Previous Booking(s)
+                </button>
+                <button type="button" class="btn btn-primary" id="proceedWithBothBtn">
+                    Proceed With Both
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

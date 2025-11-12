@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}My Bookings - Campus Resource Hub{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h1 class="mb-2">My Bookings</h1>
+    <p class="text-muted">Manage your resource reservations</p>
+</div>
+
+<ul class="nav nav-tabs mb-4" id="bookingTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming" type="button" role="tab">
+            Upcoming ({{ upcoming_bookings|length }})
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab">
+            Pending ({{ pending_bookings|length }})
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="past-tab" data-bs-toggle="tab" data-bs-target="#past" type="button" role="tab">
+            Past ({{ past_bookings|length }})
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="bookingTabsContent">
+    <!-- Upcoming Bookings -->
+    <div class="tab-pane fade show active" id="upcoming" role="tabpanel">
+        {% if upcoming_bookings %}
+        <div class="row g-4">
+            {% for booking in upcoming_bookings %}
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="card-title">{{ booking.resource.title }}</h5>
+                                <span class="badge bg-success">Approved</span>
+                                {% if booking.recurrence and booking.recurrence != 'none' %}
+                                <span class="badge bg-info">{{ booking.recurrence|title }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('resources.detail', resource_id=booking.resource_id) }}">
+                                            <i class="bi bi-eye"></i> View Resource
+                                        </a>
+                                    </li>
+                                    {% if booking.status == 'completed' %}
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('resources.detail', resource_id=booking.resource_id) }}">
+                                            <i class="bi bi-star"></i> Write a Review
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                    <li>
+                                        <form method="POST" action="{{ url_for('bookings.cancel', booking_id=booking.id) }}" 
+                                              onsubmit="return confirm('Are you sure you want to cancel this booking?');">
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i class="bi bi-x-circle"></i> Cancel Booking
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="mb-2">
+                                <i class="bi bi-calendar"></i> 
+                                <strong>{{ booking.start_time.strftime('%B %d, %Y') }}</strong>
+                            </div>
+                            <div class="mb-2">
+                                <i class="bi bi-clock"></i> 
+                                {{ booking.start_time.strftime('%I:%M %p') }} - {{ booking.end_time.strftime('%I:%M %p') }}
+                            </div>
+                            <div>
+                                <i class="bi bi-geo-alt"></i> 
+                                <small class="text-muted">{{ booking.resource.location }}</small>
+                            </div>
+                        </div>
+                        
+                        {% if booking.notes %}
+                        <div class="border-top pt-3">
+                            <small class="text-muted">
+                                <strong>Notes:</strong> {{ booking.notes }}
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-calendar" style="font-size: 4rem; color: #ccc;"></i>
+            <p class="text-muted mt-3">No upcoming bookings</p>
+            <a href="{{ url_for('resources.browse') }}" class="btn btn-primary">Browse Resources</a>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Pending Bookings -->
+    <div class="tab-pane fade" id="pending" role="tabpanel">
+        {% if pending_bookings %}
+        <div class="row g-4">
+            {% for booking in pending_bookings %}
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="card-title">{{ booking.resource.title }}</h5>
+                                <span class="badge bg-warning">Pending Approval</span>
+                                {% if booking.recurrence and booking.recurrence != 'none' %}
+                                <span class="badge bg-info">{{ booking.recurrence|title }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('resources.detail', resource_id=booking.resource_id) }}">
+                                            <i class="bi bi-eye"></i> View Resource
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <form method="POST" action="{{ url_for('bookings.cancel', booking_id=booking.id) }}" 
+                                              onsubmit="return confirm('Are you sure you want to cancel this booking request?');">
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i class="bi bi-x-circle"></i> Cancel Request
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="mb-2">
+                                <i class="bi bi-calendar"></i> 
+                                <strong>{{ booking.start_time.strftime('%B %d, %Y') }}</strong>
+                            </div>
+                            <div class="mb-2">
+                                <i class="bi bi-clock"></i> 
+                                {{ booking.start_time.strftime('%I:%M %p') }} - {{ booking.end_time.strftime('%I:%M %p') }}
+                            </div>
+                            <div>
+                                <i class="bi bi-geo-alt"></i> 
+                                <small class="text-muted">{{ booking.resource.location }}</small>
+                            </div>
+                        </div>
+                        
+                        {% if booking.notes %}
+                        <div class="border-top pt-3">
+                            <small class="text-muted">
+                                <strong>Notes:</strong> {{ booking.notes }}
+                            </small>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="alert alert-info mt-3 mb-0">
+                            <small>
+                                <i class="bi bi-info-circle"></i> 
+                                Waiting for approval from {{ booking.resource.owner.name }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-clock" style="font-size: 4rem; color: #ccc;"></i>
+            <p class="text-muted mt-3">No pending bookings</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Past Bookings -->
+    <div class="tab-pane fade" id="past" role="tabpanel">
+        {% if past_bookings %}
+        <div class="row g-4">
+            {% for booking in past_bookings %}
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="card-title">{{ booking.resource.title }}</h5>
+                                {% if booking.status == 'completed' %}
+                                <span class="badge bg-success">Completed</span>
+                                {% elif booking.status == 'cancelled' %}
+                                <span class="badge bg-secondary">Cancelled</span>
+                                {% elif booking.status == 'rejected' %}
+                                <span class="badge bg-danger">Rejected</span>
+                                {% else %}
+                                <span class="badge bg-info">Past</span>
+                                {% endif %}
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    Actions
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('resources.detail', resource_id=booking.resource_id) }}">
+                                            <i class="bi bi-eye"></i> View Resource
+                                        </a>
+                                    </li>
+                                    {% if booking.status == 'completed' %}
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('resources.detail', resource_id=booking.resource_id) }}">
+                                            <i class="bi bi-star"></i> Write a Review
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="mb-2">
+                                <i class="bi bi-calendar"></i> 
+                                <strong>{{ booking.start_time.strftime('%B %d, %Y') }}</strong>
+                            </div>
+                            <div class="mb-2">
+                                <i class="bi bi-clock"></i> 
+                                {{ booking.start_time.strftime('%I:%M %p') }} - {{ booking.end_time.strftime('%I:%M %p') }}
+                            </div>
+                            <div>
+                                <i class="bi bi-geo-alt"></i> 
+                                <small class="text-muted">{{ booking.resource.location }}</small>
+                            </div>
+                        </div>
+                        
+                        {% if booking.notes %}
+                        <div class="border-top pt-3">
+                            <small class="text-muted">
+                                <strong>Notes:</strong> {{ booking.notes }}
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-calendar-check" style="font-size: 4rem; color: #ccc;"></i>
+            <p class="text-muted mt-3">No past bookings</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

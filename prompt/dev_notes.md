@@ -20,3 +20,44 @@
 - Prompt: I am creating a Campus Resource Hub, a full-stack web application using Flask, Jinja2, Bootstrap, and SQLite. I have a basic file structure set up with context available in docs\content. See main-context.md for a project overview and glossary of the context available. See Project-Description.docx for detailed requirements. Prototype code is available in docs\context\DT\Prototype Code. For now, please familiarize yourself with the project requirements and then start setting up a basic foundation for the project. Things like the MVC architecture, a venv, and the start of the database.
 - Outcome: Cursor created files for MVC, a basic app.py, and a SQLite database. It placed the database in a folder that is ingored via the gitignore, but I want the database to be included in the GitHub repo so I asked Cursor to make that change.
 
+## Building the Browse Resources Page
+- Tool: Cursor
+- Prompt: Perfect, now let's start working on core functionality. I think the best place to start would be the Resource Listings. This would be the "Browse Resources" screen from the prototype. Please implement the following requirements for the resource listings:
+  - CRUD operations for resources: title, description, images, category, location, availability rules, owner (user/team), capacity, and optional equipment lists.
+  - Listing lifecycle: draft, published, archived.
+  - For the visual side of things, use the AiDD-Final-Wireframes-Combined.pdf file and Prototype Code for reference.
+- Outcome: Cursor implemented registration and login, the Browse Resources page including searching and filtering, and creating new resources. It included way more features than I anticipated, so I had to carefully review everything to make sure it all functions properly. Additionally, it did not style the visuals like the wireframe, instead just using default Bootstrap. I am keeping all of its work for now, but may change the visuals and need to address any issues that come up.
+
+## Booking & Scheduling Functionality
+- Tool: Cursor
+- Prompt: That looks great! Now let's work on implementing the booking flow. Again, use the wireframe as a reference. Please follow these requirements:
+  - Calendar-based booking flow with start/end time, recurrence option (optional), and conflict detection.
+  - Booking approval workflow: automatic approval for open resources, staff/admin approval for restricted resources.
+  - Notifications for booking confirmations and changes.
+- Outcome: Cursor implemented the booking flow and staff/admin approval, but it did not implement conflict detection or notifications. I asked it to add those features.
+
+## Conflict Detection & Notifications
+- Tool: Cursor
+- Prompt: The core of booking and scheduling seems to work great. Can you now add conflict detection and notifications? So if a user tries to book a resource that overlaps with a resource they have already booked, they should get a warning asking them if they would like to proceed with both bookings, cancel the booking they're currently trying to book, or cancel the booking they previously booked. For notifications, there should be a little notification icon next to the profile icon in the nav bar. If a user's booking is confirmed, denied, or changed, they should get a notification informing them.
+- Outcome: Cursor successfully implemented conflict detection and notifications. There are some minor visual changes I would like to make, but I'm keeping Cursor's solution.
+
+## Messaging & Dummy Data
+- Tool: Cursor
+- Prompt: That's all looking great. Now let's work on Messaging, so the basic message thread between requester and resource owner. This is included in the prototype, so be sure to reference it. The idea here is that on the details page for a resource, if a user clicks the "Contact Owner" button, it will take them to a separate "Messages" page where they can have a basic chat back and forth with the owner. Additionally, can you put in some dummy data in the database? So some resources, users, etc. Just to make it easier to test. For any dummy accounts, put the credentials somewhere I can find them so I can log in.
+- Outcome: Cursor successfully implemented messaging and added dummy data to the database. I kept Cursor's solution.
+
+## Reviews & Ratings
+- Tool: Cursor
+- Prompt: Perfect! Now let's work on reviews & ratings using this set of requirements:
+  - After completed bookings, users may rate and leave feedback for resources and hosts.
+  - Aggregate rating calculation and top‑rated badges.
+- Outcome: Cursor's solution initally broke the resource details page, causing a TemplateSyntaxError. I asked Cursor to fix the error and it did so successfully. I kept its fixed solution.
+
+## User Management & Authentication
+- Tool: Cursor
+- Prompt: Alright now let's get into User Management & Authentication. We already have login and registration working which is great. Now I want to double check that passwords are being stored hashed. Additionally, let's make sure that the Student, Staff, and Admin roles get different levels of access.
+  - Students can view resources, request bookings, do messaging, and manage their own bookings (cancel, edit, view). Students CANNOT create or manage resources.
+  - Staff can do everything students can do, and they can create resources and manage resources they have created.
+  - Admins can do everything Students and Staff can do, and they also get access to an admin dashboard. Don't worry about implementing the admin dashboard for now, but do create a page for it and make sure only admins can access it.
+- Outcome: Cursor verified that passwords are being hashed, and it implemented controls such that Students, Staff, and Admins have different levels of access. It also created a placeholder for the Admin dashboard. I kept its solution.
+

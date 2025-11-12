@@ -18,6 +18,8 @@ class Review(db.Model):
     # Ensure one review per user per resource
     __table_args__ = (db.UniqueConstraint('resource_id', 'user_id', name='unique_user_resource_review'),)
     
+    # Relationships (backref is defined in Resource and User models)
+    
     def __repr__(self):
         return f'<Review {self.id}>'
 
