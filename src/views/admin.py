@@ -2,6 +2,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import current_user
 from sqlalchemy import func, desc
+from sqlalchemy.orm import joinedload
 from datetime import datetime
 from src.database import db
 from src.decorators import admin_required
@@ -141,7 +142,9 @@ def update_user_role(user_id):
 @admin_required
 def resources():
     """Resource management page."""
-    resources_list = Resource.query.order_by(desc(Resource.created_at)).all()
+    resources_list = Resource.query.options(
+        joinedload(Resource.owner)
+    ).order_by(desc(Resource.created_at)).all()
     
     # Add stats to each resource
     resources_with_stats = []
@@ -203,6 +206,7 @@ def publish_resource(resource_id):
 def approvals():
     """Pending booking approvals page."""
     pending_bookings = Booking.query.filter_by(status='pending')\
+        .options(joinedload(Booking.resource), joinedload(Booking.user))\
         .order_by(Booking.created_at).all()
     
     # Get stats for overview
@@ -284,7 +288,10 @@ def reject_booking(booking_id):
 @admin_required
 def reviews():
     """Review moderation page."""
-    reviews_list = Review.query.order_by(desc(Review.created_at)).all()
+    reviews_list = Review.query.options(
+        joinedload(Review.resource),
+        joinedload(Review.user)
+    ).order_by(desc(Review.created_at)).all()
     
     # Get stats for overview
     total_users = User.query.count()

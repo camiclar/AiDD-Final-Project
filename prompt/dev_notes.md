@@ -61,3 +61,13 @@
   - Admins can do everything Students and Staff can do, and they also get access to an admin dashboard. Don't worry about implementing the admin dashboard for now, but do create a page for it and make sure only admins can access it.
 - Outcome: Cursor verified that passwords are being hashed, and it implemented controls such that Students, Staff, and Admins have different levels of access. It also created a placeholder for the Admin dashboard. I kept its solution.
 
+## Admin Dashboard
+- Tool: Cursor
+- Prompt: That's all looking good. Now let's move onto the admin panel. Here are the requirements for it, but also look at the prototype to see how it has been designed: Admin dashboard to manage users, resources, bookings, and moderate reviews.
+- Outcome: Cursor created the admin dashboard as requested, however a lot of the data, such as users, resources, and approvals, are not displaying on it. I will have Cursor iterate on the dashboard to resolve this issue.
+
+## Fixing Admin Dashboard
+- Tool: Cursor
+- Prompt: This is a great start! However, I'm noticing that a lot of the data is not loading on the admin panel. So the Users tab is empty, the resources tab is empty, the Reviews tab is empty, and the Approvals tab is empty when you click on it, but it has a little 3 next to the word "Approvals" in the list of tabs which implies to me that there are 3 pending approvals. However, the "Overview" tab looks like everything is loading properly and the little card things at the top seem to also have data loading correctly. Could you look into this?
+- Outcome: Cursor looked into the issue and fixed the bug causing the data not to load.
+
