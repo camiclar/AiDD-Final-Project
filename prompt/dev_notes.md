@@ -4,9 +4,9 @@
 11.	What did you learn about verifying and improving AI-generated outputs? 
 
 12.	What ethical or managerial considerations emerged from using AI in your project?
-
+The ethical considerations that arose from using AI during this project were the accuracy risk, the risk of bias, and transparency risks. Managerial considerations for this assignment were that we were not doing enough in the process, letting AI take the reigns. We made sure that we did not do this by reviewing individually what AI had produced to endsure that there were no hidden bugs.
 13.	How might these tools change the role of a business technologist or product manager in the next five years?
-
+Their role will completely move from writing code to orchestrating Agents wrting code. The humans jobs will include describing the problem, requirements, edge cases, and constraint as well as working on how the application will look and interact with the customer. 
 
 # Dev Notes & AI Interactions
 
