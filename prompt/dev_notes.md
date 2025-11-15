@@ -1,8 +1,9 @@
 ## Reflection Prompts
 10.	How did AI tools shape your design or coding decisions? 
+AI accelerated the decision-making process throughout the project. It helped quickly compare potential design patterns, identify cleaner architectures, and it automatically used best practies that we used in had learned in class so we didn't even need to think about remembering to add it. Instead, we could just look back and confirm that it had included everything we need.
 
 11.	What did you learn about verifying and improving AI-generated outputs? 
-
+We learned that AI outputs should never be used for a final product. We tired to do a oneshot just to see how far it would get us, but it was no where near what we wanted for our final product. What worked really well for imporving the output AI gave us was providing clearer constraints, edge cases, or examples. The process of refinement decreased with time as we figured out exactly we wanted and didn't want. 
 12.	What ethical or managerial considerations emerged from using AI in your project?
 The ethical considerations that arose from using AI during this project were the accuracy risk, the risk of bias, and transparency risks. Managerial considerations for this assignment were that we were not doing enough in the process, letting AI take the reigns. We made sure that we did not do this by reviewing individually what AI had produced to endsure that there were no hidden bugs.
 13.	How might these tools change the role of a business technologist or product manager in the next five years?
