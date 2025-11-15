@@ -34,16 +34,6 @@ This will install:
 - `python-dotenv` - For loading environment variables from `.env` file
 - `Markdown` - For formatting AI responses
 
-### 4. Deploying to Production
-
-When deploying to a hosting platform (Heroku, Railway, Render, etc.), you'll need to set the `GEMINI_API_KEY` as an environment variable in your hosting platform's settings:
-
-- **Heroku**: Settings → Config Vars → Add `GEMINI_API_KEY`
-- **Railway**: Variables → Add `GEMINI_API_KEY`
-- **Render**: Environment → Add `GEMINI_API_KEY`
-
-The application will automatically load the API key from the environment variable.
-
 ## Usage
 
 1. Log in as an admin user

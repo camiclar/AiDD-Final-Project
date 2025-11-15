@@ -15,7 +15,7 @@ This project demonstrates AI-first full-stack development using Cursor, GitHub C
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Backend**         | Flask (Python 3.10+) following MVC architecture: controllers (routes), models (ORM / SQL), data access layer, and templates.                    |
 | **Frontend**        | Jinja templates + Bootstrap 5 for responsive design and accessibility.                                                                          |
-| **Database**        | SQLite (local) with optional PostgreSQL for deployment. Includes tables for users, resources, bookings, messages, and reviews.                  |
+| **Database**        | SQLite. Includes tables for users, resources, bookings, messages, and reviews.                  |
 | **Auth**            | Flask-Login or Flask-Security with bcrypt password hashing.                                                                                     |
 | **Testing**         | pytest for unit and integration tests; optional AI-based validation in `/tests/ai_eval`.                                                        |
 | **Version Control** | GitHub with documented AI contributions (`.prompt/dev_notes.md`).                                                                               |

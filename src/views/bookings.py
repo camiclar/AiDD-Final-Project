@@ -96,7 +96,8 @@ def list_bookings():
 @login_required
 def create(resource_id):
     """Create a new booking."""
-    resource = Resource.query.get_or_404(resource_id)
+    from sqlalchemy.orm import joinedload
+    resource = Resource.query.options(joinedload(Resource.owner)).get_or_404(resource_id)
     
     # Only allow booking published resources
     if resource.status != 'published':

@@ -8,7 +8,7 @@ db = SQLAlchemy()
 
 def init_db(app: Flask):
     """Initialize the database with the Flask app."""
-    # Configure database URI
+    # Configure SQLite database
     basedir = os.path.abspath(os.path.dirname(__file__))
     db_path = os.path.join(basedir, '..', 'instance', 'campus_resource_hub.db')
     
@@ -16,6 +16,7 @@ def init_db(app: Flask):
     os.makedirs(os.path.dirname(db_path), exist_ok=True)
     
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+    
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
     db.init_app(app)

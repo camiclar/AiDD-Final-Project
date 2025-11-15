@@ -13,7 +13,7 @@ A full-stack web application that enables university departments, student organi
 
 - **Backend**: Flask (Python 3.10+)
 - **Frontend**: Jinja2 templates + Bootstrap 5
-- **Database**: SQLite (local) with optional PostgreSQL for deployment
+- **Database**: SQLite
 - **Authentication**: Flask-Login with bcrypt password hashing
 
 ## Project Structure
@@ -80,6 +80,58 @@ This will create:
 **Test credentials are available in `TEST_CREDENTIALS.md`**
 
 **Note:** Running this script will clear all existing data in the database!
+
+## Testing
+
+The project includes comprehensive tests using pytest. To run the tests:
+
+### Install Test Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### Run All Tests
+
+```bash
+pytest
+```
+
+### Run Specific Test Files
+
+```bash
+# Unit tests for booking logic
+pytest tests/test_booking_logic.py
+
+# Data access layer tests
+pytest tests/test_data_access.py
+
+# Authentication integration tests
+pytest tests/test_auth_integration.py
+
+# Security tests
+pytest tests/test_security.py
+
+# End-to-end booking tests
+pytest tests/test_e2e_booking.py
+```
+
+### Run Tests with Coverage
+
+```bash
+pytest --cov=src --cov-report=html
+```
+
+This generates an HTML coverage report in `htmlcov/index.html`.
+
+### Test Structure
+
+- **`tests/test_booking_logic.py`**: Unit tests for booking conflict detection and status transitions
+- **`tests/test_data_access.py`**: Unit tests for Data Access Layer (CRUD operations independent of Flask routes)
+- **`tests/test_auth_integration.py`**: Integration tests for authentication flow (register → login → access protected route)
+- **`tests/test_security.py`**: Security tests for SQL injection protection and template escaping
+- **`tests/test_e2e_booking.py`**: End-to-end tests for booking a resource through the UI (automated)
+- **`tests/manual_e2e_booking.py`**: Manual end-to-end test script with step-by-step instructions
 
 ## Development Notes
 
