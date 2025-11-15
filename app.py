@@ -28,24 +28,31 @@ def create_app():
     
     # Register blueprints
     from src.views.auth import auth_bp
+    from src.views.dashboard import dashboard_bp
     from src.views.resources import resources_bp
     from src.views.bookings import bookings_bp
     from src.views.notifications import notifications_bp
     from src.views.messages import messages_bp
     from src.views.reviews import reviews_bp
+    from src.views.profile import profile_bp
     from src.views.admin import admin_bp
     
     app.register_blueprint(auth_bp, url_prefix='/auth')
+    app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
     app.register_blueprint(resources_bp, url_prefix='/resources')
     app.register_blueprint(bookings_bp, url_prefix='/bookings')
     app.register_blueprint(notifications_bp, url_prefix='/notifications')
     app.register_blueprint(messages_bp, url_prefix='/messages')
     app.register_blueprint(reviews_bp, url_prefix='/reviews')
+    app.register_blueprint(profile_bp, url_prefix='/profile')
     app.register_blueprint(admin_bp, url_prefix='/admin')
     
     @app.route('/')
     def index():
         """Home page route."""
+        from flask_login import current_user
+        if current_user.is_authenticated:
+            return redirect(url_for('dashboard.index'))
         return redirect(url_for('resources.browse'))
     
     return app

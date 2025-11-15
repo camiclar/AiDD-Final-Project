@@ -51,6 +51,18 @@ def list_notifications_api():
     })
 
 
+@notifications_bp.route('/mark-all-read', methods=['POST'])
+@login_required
+def mark_all_read():
+    """Mark all notifications as read for the current user."""
+    notifications = Notification.query.filter_by(user_id=current_user.id, read=False).all()
+    for notification in notifications:
+        notification.read = True
+    db.session.commit()
+    
+    return jsonify({'success': True})
+
+
 @notifications_bp.route('/<int:notification_id>/mark-read', methods=['POST'])
 @login_required
 def mark_read(notification_id):

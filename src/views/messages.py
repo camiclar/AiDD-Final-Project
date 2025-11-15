@@ -99,40 +99,12 @@ def view_thread(thread_id):
     # Get all messages in this thread
     messages = Message.query.filter_by(thread_id=thread_id).order_by(Message.created_at.asc()).all()
     
-    # Get resource/booking info from thread_id to determine other user if no messages yet
+    # Get resource/booking info from thread_id
     resource = None
     booking = None
     other_user = None
     
-    if thread_id.startswith('resource_'):
-        try:
-            resource_id = int(thread_id.split('_')[1])
-            resource = Resource.query.get(resource_id)
-            if resource:
-                from src.models import User
-                other_user = User.query.get(resource.owner_id)
-                # Verify user is not the owner
-                if resource.owner_id == current_user.id:
-                    flash('You cannot message yourself.', 'danger')
-                    return redirect(url_for('resources.detail', resource_id=resource_id))
-        except (ValueError, IndexError):
-            pass
-    elif thread_id.startswith('booking_'):
-        try:
-            booking_id = int(thread_id.split('_')[1])
-            booking = Booking.query.get(booking_id)
-            if booking:
-                resource = booking.resource
-                from src.models import User
-                # Other user is the opposite party
-                if booking.user_id == current_user.id:
-                    other_user = User.query.get(booking.resource.owner_id)
-                else:
-                    other_user = User.query.get(booking.user_id)
-        except (ValueError, IndexError):
-            pass
-    
-    # If we have messages, verify user is part of thread and get other user
+    # If we have messages, verify user is part of thread and get other user from messages
     if messages:
         first_message = messages[0]
         if first_message.sender_id != current_user.id and first_message.receiver_id != current_user.id:
@@ -153,6 +125,52 @@ def view_thread(thread_id):
         
         from src.models import User
         other_user = User.query.get(other_user_id)
+        
+        # Get resource/booking info for context
+        if thread_id.startswith('resource_'):
+            try:
+                resource_id = int(thread_id.split('_')[1])
+                resource = Resource.query.get(resource_id)
+            except (ValueError, IndexError):
+                pass
+        elif thread_id.startswith('booking_'):
+            try:
+                booking_id = int(thread_id.split('_')[1])
+                booking = Booking.query.get(booking_id)
+                if booking:
+                    resource = booking.resource
+            except (ValueError, IndexError):
+                pass
+    else:
+        # No messages yet - determine other user from thread_id
+        # Only check "cannot message yourself" when starting a NEW conversation
+        if thread_id.startswith('resource_'):
+            try:
+                resource_id = int(thread_id.split('_')[1])
+                resource = Resource.query.get(resource_id)
+                if resource:
+                    from src.models import User
+                    # If current user is the owner, they can't start a conversation with themselves
+                    if resource.owner_id == current_user.id:
+                        flash('You cannot message yourself.', 'danger')
+                        return redirect(url_for('resources.detail', resource_id=resource_id))
+                    other_user = User.query.get(resource.owner_id)
+            except (ValueError, IndexError):
+                pass
+        elif thread_id.startswith('booking_'):
+            try:
+                booking_id = int(thread_id.split('_')[1])
+                booking = Booking.query.get(booking_id)
+                if booking:
+                    resource = booking.resource
+                    from src.models import User
+                    # Other user is the opposite party
+                    if booking.user_id == current_user.id:
+                        other_user = User.query.get(booking.resource.owner_id)
+                    else:
+                        other_user = User.query.get(booking.user_id)
+            except (ValueError, IndexError):
+                pass
     
     if not other_user:
         flash('User not found.', 'danger')
@@ -202,42 +220,44 @@ def send_message(thread_id):
     
     # Determine receiver based on thread
     receiver_id = None
-    if thread_id.startswith('resource_'):
-        resource_id = int(thread_id.split('_')[1])
-        resource = Resource.query.get(resource_id)
-        if not resource:
-            flash('Resource not found.', 'danger')
-            return redirect(url_for('messages.list_messages'))
-        
-        # Receiver is the resource owner
-        receiver_id = resource.owner_id
-        
-        # Verify user is not the owner
-        if receiver_id == current_user.id:
-            flash('You cannot message yourself.', 'danger')
-            return redirect(url_for('resources.detail', resource_id=resource_id))
     
-    elif thread_id.startswith('booking_'):
-        booking_id = int(thread_id.split('_')[1])
-        booking = Booking.query.get(booking_id)
-        if not booking:
-            flash('Booking not found.', 'danger')
-            return redirect(url_for('messages.list_messages'))
-        
-        # Receiver is the other party (owner if user is requester, requester if user is owner)
-        if booking.user_id == current_user.id:
-            receiver_id = booking.resource.owner_id
+    # First, check if there are existing messages - use those to determine receiver
+    existing_message = Message.query.filter_by(thread_id=thread_id).first()
+    if existing_message:
+        # Use existing messages to determine receiver (the opposite party)
+        if existing_message.sender_id == current_user.id:
+            receiver_id = existing_message.receiver_id
         else:
-            receiver_id = booking.user_id
-    
+            receiver_id = existing_message.sender_id
     else:
-        # Try to get from existing messages
-        existing_message = Message.query.filter_by(thread_id=thread_id).first()
-        if existing_message:
-            if existing_message.sender_id == current_user.id:
-                receiver_id = existing_message.receiver_id
+        # No existing messages - determine receiver from thread_id
+        if thread_id.startswith('resource_'):
+            resource_id = int(thread_id.split('_')[1])
+            resource = Resource.query.get(resource_id)
+            if not resource:
+                flash('Resource not found.', 'danger')
+                return redirect(url_for('messages.list_messages'))
+            
+            # Receiver is the resource owner (only for NEW conversations)
+            receiver_id = resource.owner_id
+            
+            # Verify user is not the owner (only when starting NEW conversation)
+            if receiver_id == current_user.id:
+                flash('You cannot message yourself.', 'danger')
+                return redirect(url_for('resources.detail', resource_id=resource_id))
+        
+        elif thread_id.startswith('booking_'):
+            booking_id = int(thread_id.split('_')[1])
+            booking = Booking.query.get(booking_id)
+            if not booking:
+                flash('Booking not found.', 'danger')
+                return redirect(url_for('messages.list_messages'))
+            
+            # Receiver is the other party (owner if user is requester, requester if user is owner)
+            if booking.user_id == current_user.id:
+                receiver_id = booking.resource.owner_id
             else:
-                receiver_id = existing_message.sender_id
+                receiver_id = booking.user_id
         else:
             flash('Invalid thread.', 'danger')
             return redirect(url_for('messages.list_messages'))
@@ -264,6 +284,5 @@ def send_message(thread_id):
     
     db.session.commit()
     
-    flash('Message sent!', 'success')
     return redirect(url_for('messages.view_thread', thread_id=thread_id))
 

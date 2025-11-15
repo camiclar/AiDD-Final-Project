@@ -69,6 +69,19 @@ def register():
         user.set_password(password)
         
         db.session.add(user)
+        db.session.flush()  # Get the user ID without committing
+        
+        # Handle profile picture upload
+        if 'profile_picture' in request.files:
+            from src.utils import save_profile_picture
+            file = request.files['profile_picture']
+            if file and file.filename:
+                image_path = save_profile_picture(file, user.id)
+                if image_path:
+                    user.profile_image = image_path
+                else:
+                    flash('Invalid image file. Please upload a PNG, JPG, JPEG, GIF, or WEBP image (max 5MB).', 'warning')
+        
         db.session.commit()
         
         flash('Registration successful! Please login.', 'success')

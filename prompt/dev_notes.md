@@ -71,3 +71,12 @@
 - Prompt: This is a great start! However, I'm noticing that a lot of the data is not loading on the admin panel. So the Users tab is empty, the resources tab is empty, the Reviews tab is empty, and the Approvals tab is empty when you click on it, but it has a little 3 next to the word "Approvals" in the list of tabs which implies to me that there are 3 pending approvals. However, the "Overview" tab looks like everything is loading properly and the little card things at the top seem to also have data loading correctly. Could you look into this?
 - Outcome: Cursor looked into the issue and fixed the bug causing the data not to load.
 
+## Updating the Navigation
+- Tool: Cursor
+- Prompt: Awesome, I think it's safe to say the core functionality is now fully implemented. There is a little more functionality I'd like to do, but before we get to that, I want to work on the visuals starting with the navigation. Right now, most of the pages are in the nav bar at the top. I want to make it more like the prototype where the top nav bar has the name of the site (Campus Resource Hub), the notifications, and the profile. The rest of the pages (Dashboard, Browse Resources, My Bookings, Message, My Resources, Admin Panel, and Create Resource) are all on side navigation. In short, I want to redo the navigation so it follows the prototype. I'm attaching an image of how it is in the prototype, but be sure to reference the prototype in the context folder.
+- Outcome: Cursor updated the code, but introduced a bug that prevented all pages from loading. I asked it to fix this error, and it took a few iterations to get it fixed. I kept the fixed solution.
+
+## Profile Pictures
+- Tool: Cursor
+- Prompt: Great. Now can you add uploading a profile picture as a feature? So both when the user signs up for a new account and editing their profile, they should get the option to upload a profile picutre.
+- Outcome: 
