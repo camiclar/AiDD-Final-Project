@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Simple Gemini Demo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 2rem auto;
+    }
+
+    textarea {
+      width: 100%;
+      height: 120px;
+      font-size: 1rem;
+    }
+
+    .box {
+      padding: 1rem;
+      border-radius: 6px;
+      background: #f7f7f7;
+      margin-top: 1rem;
+    }
+
+    .error {
+      background: #ffecec;
+      border: 1px solid #ffbcbc;
+      color: #900;
+      padding: 0.8rem;
+    }
+
+    .result {
+      background: #eef9ff;
+      border: 1px solid #bfe6ff;
+      color: #033;
+      padding: 1.2rem;
+      line-height: 1.6;
+      font-size: 1rem;
+    }
+
+    .result h1, .result h2, .result h3, .result h4 {
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+      color: #0056b3;
+    }
+
+    .result h1 { font-size: 1.5rem; }
+    .result h2 { font-size: 1.3rem; }
+    .result h3 { font-size: 1.1rem; }
+    
+    .result p {
+      margin: 0.8rem 0;
+    }
+
+    .result ul, .result ol {
+      margin: 0.8rem 0;
+      padding-left: 2rem;
+    }
+
+    .result li {
+      margin: 0.4rem 0;
+    }
+
+    .result code {
+      background: #f4f4f4;
+      border: 1px solid #ddd;
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      color: #c7254e;
+    }
+
+    .result pre {
+      background: #2d2d2d;
+      color: #f8f8f2;
+      padding: 1rem;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+
+    .result pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      color: #f8f8f2;
+      font-size: 0.9rem;
+    }
+
+    .result blockquote {
+      border-left: 4px solid #0066cc;
+      padding-left: 1rem;
+      margin: 1rem 0;
+      color: #555;
+      font-style: italic;
+    }
+
+    .result table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1rem 0;
+    }
+
+    .result th, .result td {
+      border: 1px solid #ddd;
+      padding: 0.5rem;
+      text-align: left;
+    }
+
+    .result th {
+      background: #f0f0f0;
+      font-weight: bold;
+    }
+
+    .result strong {
+      color: #0056b3;
+      font-weight: bold;
+    }
+
+    .result em {
+      font-style: italic;
+      color: #555;
+    }
+
+    .instructions {
+      background: #fffbec;
+      border: 1px solid #ffe4a1;
+      border-radius: 6px;
+      padding: 1rem;
+      margin: 1.5rem 0;
+    }
+
+    .instructions h3 {
+      margin-top: 0;
+    }
+
+    .instructions ul {
+      margin: 0.5rem 0;
+      padding-left: 1.5rem;
+    }
+
+    .instructions li {
+      margin: 0.5rem 0;
+    }
+
+    .example {
+      background: #f0f0f0;
+      border-left: 3px solid #666;
+      padding: 0.5rem 0.8rem;
+      margin: 0.5rem 0;
+      font-style: italic;
+    }
+
+    input[type="text"], select {
+      width: 100%;
+      padding: 0.4rem;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+
+    /* Hide instructions by default */
+    #toggle-help:not(:checked) ~ .instructions {
+      display: none;
+    }
+
+    .help-toggle-label {
+      display: inline-block;
+      margin: 1rem 0;
+      cursor: pointer;
+      color: #0066cc;
+      font-weight: bold;
+    }
+
+    .help-toggle-label:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Simple Gemini Demo</h1>
+  <p>Currently using: <strong>{{ model }}</strong></p>
+
+  {% if init_error %}
+  <div class="error">Initialization error: {{ init_error }}</div>
+  {% endif %}
+
+  <form method="post">
+    <label for="api_key">API Key</label>
+    <input id="api_key" name="api_key" type="text" value="{{ api_key }}" placeholder="Enter GEMINI API key (or leave blank to use env)">
+    <br /><br />
+
+    <label for="model">Model</label>
+    <select id="model" name="model">
+      {% for m in models %}
+        <option value="{{ m }}" {% if m == model %}selected{% endif %}>{{ m }}</option>
+      {% endfor %}
+    </select>
+    <br /><br />
+
+    <label for="prompt">Prompt</label>
+    <textarea id="prompt" name="prompt">{{ prompt }}</textarea>
+    <br />
+    
+    <input type="checkbox" id="use_rag" name="use_rag" {% if use_rag %}checked{% endif %}>
+    <label for="use_rag">🔍 Search history database (RAG mode) - AI will use relevant past conversations to answer</label>
+    <br />
+    
+    <input type="checkbox" id="use_business_data" name="use_business_data" {% if use_business_data %}checked{% endif %}>
+    <label for="use_business_data">📊 Query business database - Ask questions about customers, products, and orders</label>
+    <br /><br />
+    
+    <button type="submit">Ask model</button>
+  </form>
+
+
+  {% if error %}
+  <div class="box error">{{ error }}</div>
+  {% endif %}
+
+
+  {% if rag_context %}
+  <div class="box" style="background: #f0f8ff; border: 1px solid #b0d4ff;">
+    <strong>📚 RAG Context Used:</strong>
+    <div style="margin-top: 0.8rem; font-size: 0.9rem;">{{ rag_context|safe }}</div>
+  </div>
+  {% endif %}
+
+  {% if business_query_result %}
+  <div class="box" style="background: #fff8e1; border: 1px solid #ffd54f;">
+    <strong>📊 Business Database Query:</strong>
+    <pre style="white-space: pre-wrap; font-size: 0.85rem; margin-top: 0.5rem;">{{ business_query_result }}</pre>
+  </div>
+  {% endif %}
+
+  {% if result %}
+  <div class="box result">{{ result|safe }}</div>
+  {% endif %}
+
+
+  <hr />
+
+  <input type="checkbox" id="toggle-help" style="display: none;">
+  <label for="toggle-help" class="help-toggle-label">❓ Show/Hide Instructions</label>
+
+  <div class="instructions">
+    <h3>📋 How to Use This App</h3>
+    <ol>
+      <li><strong>API Key:</strong> Enter your Google Gemini API key. You can get one for free at <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a>. If you've set the <code>GEMINI_API_KEY</code> environment variable, you can leave this blank.</li>
+      <li><strong>Model:</strong> Select which Gemini model you want to use from the dropdown. Different models have different capabilities and speed.</li>
+      <li><strong>Prompt:</strong> Type your question or instruction in the text area. Be specific for better results!</li>
+      <li><strong>Submit:</strong> Click "Ask model" to send your prompt to the Gemini API and see the response.</li>
+      <li><strong>History:</strong> All successful requests are saved to a database. Click "View generation history" below to see past conversations.</li>
+    </ol>
+
+    <h4>💡 Example Prompts to Try:</h4>
+    <div class="example">Write a haiku about coding</div>
+    <div class="example">Explain quantum computing in simple terms</div>
+    <div class="example">Create a Python function to calculate fibonacci numbers</div>
+    <div class="example">What are three tips for improving productivity?</div>
+    
+    <h4>🔍 RAG Mode Examples (with RAG checkbox enabled):</h4>
+    <p>After you have some conversation history, try these with RAG enabled:</p>
+    <div class="example">What did I ask about Python before?</div>
+    <div class="example">Summarize my past questions about programming</div>
+    <div class="example">Based on our previous conversations, what topics am I interested in?</div>
+    
+    <h4>📊 Business Database Examples (with Business Data checkbox enabled):</h4>
+    <p>Ask natural language questions about the business data:</p>
+    <div class="example">Show me all customers from New York</div>
+    <div class="example">What are the top 5 most expensive products?</div>
+    <div class="example">How many orders did each customer make?</div>
+    <div class="example">What is the total revenue from all orders?</div>
+    <div class="example">Which products are low on stock (less than 50 units)?</div>
+    <div class="example">Show me all electronics products under $100</div>
+  </div>
+
+  <p><a href="/history">View generation history</a></p>
+  <small>Note: This file is simplified for classroom demos. Don't commit real API keys.</small>
+</body>
+
+</html>

@@ -309,3 +309,159 @@ def reviews():
                          top_resources=[],
                          pending_bookings=[],
                          active_tab='reviews')
+
+
+@admin_bp.route('/chatbot/query', methods=['POST'])
+@admin_required
+def chatbot_query():
+    """Handle chatbot queries using Gemini API."""
+    import os
+    from google import genai
+    from markupsafe import Markup
+    import markdown
+    
+    user_question = request.json.get('question', '').strip()
+    
+    if not user_question:
+        return jsonify({'error': 'Please enter a question.'}), 400
+    
+    # Get API key from environment variable
+    api_key = os.environ.get('GEMINI_API_KEY')
+    if not api_key:
+        return jsonify({'error': 'GEMINI_API_KEY environment variable is not set. Please configure it in your .env file.'}), 500
+    
+    try:
+        import time
+        
+        # Initialize Gemini client
+        client = genai.Client(api_key=api_key)
+        
+        # Try different models in order of preference (free tier models)
+        # The google-genai library may use different model names than the REST API
+        models_to_try = [
+            'gemini-pro',  # Most widely available free tier model
+            'gemini-1.5-pro',
+            'gemini-1.5-flash',
+            'gemini-2.0-flash-exp'
+        ]
+        
+        # Get database schema
+        from src.utils.chatbot import get_database_schema, execute_safe_query
+        schema_info = get_database_schema()
+        
+        # First API call: Generate SQL query
+        sql_prompt = f"""{schema_info}
+
+User Question: {user_question}
+
+Please generate a SQL SELECT query to answer this question. Return ONLY the SQL query, nothing else.
+Make sure the query is safe (SELECT only) and follows SQLite syntax. Use proper table and column names as described in the schema above."""
+        
+        # Helper function to make API call with retry logic
+        def make_api_call_with_retry(model_name, prompt, max_retries=3):
+            """Make API call with exponential backoff retry for rate limits."""
+            for attempt in range(max_retries):
+                try:
+                    return client.models.generate_content(model=model_name, contents=prompt)
+                except Exception as e:
+                    error_str = str(e)
+                    
+                    # If it's a 404, don't retry - try next model
+                    if '404' in error_str or 'NOT_FOUND' in error_str:
+                        raise  # Re-raise to try next model
+                    
+                    # If it's a rate limit/quota error, retry with backoff
+                    if '429' in error_str or 'RESOURCE_EXHAUSTED' in error_str or 'quota' in error_str.lower():
+                        if attempt < max_retries - 1:
+                            # Exponential backoff: 2^attempt seconds (2s, 4s, 8s)
+                            wait_time = 2 ** attempt
+                            print(f"Rate limit hit, waiting {wait_time} seconds before retry {attempt + 1}/{max_retries}...")
+                            time.sleep(wait_time)
+                            continue
+                        else:
+                            # Last attempt failed, raise with helpful message
+                            raise Exception(
+                                f"Rate limit exceeded after {max_retries} retries. "
+                                "This may be due to free tier limits. "
+                                "Please wait a few minutes and try again, or consider enabling billing for higher limits."
+                            )
+                    
+                    # For other errors, raise immediately
+                    raise
+            
+            return None
+        
+        # Try models until one works
+        sql_response = None
+        model = None
+        last_error = None
+        
+        for model_name in models_to_try:
+            try:
+                model = model_name
+                sql_response = make_api_call_with_retry(model, sql_prompt)
+                break  # Success, exit loop
+            except Exception as e:
+                last_error = e
+                # If it's a 404, try next model
+                error_str = str(e)
+                if '404' in error_str or 'NOT_FOUND' in error_str:
+                    continue  # Try next model
+                else:
+                    # For other errors (quota, etc.), raise immediately
+                    raise
+        
+        if sql_response is None:
+            raise Exception(f"Could not find an available model. Last error: {last_error}")
+        generated_sql = sql_response.text.strip()
+        
+        # Clean up the SQL (remove markdown code blocks if present)
+        if '```sql' in generated_sql:
+            generated_sql = generated_sql.split('```sql')[1].split('```')[0].strip()
+        elif '```' in generated_sql:
+            generated_sql = generated_sql.split('```')[1].split('```')[0].strip()
+        
+        # Execute the query
+        query_result = execute_safe_query(generated_sql)
+        
+        if 'error' in query_result:
+            # Include the generated SQL in the error for debugging
+            return jsonify({
+                'error': f"Database query error: {query_result['error']}",
+                'sql': generated_sql,
+                'debug': f"Generated SQL (first 200 chars): {generated_sql[:200]}"
+            }), 400
+        
+        # Second API call: Summarize results in natural language
+        result_data = query_result['data']
+        
+        summary_prompt = f"""User asked: {user_question}
+
+I executed this SQL query:
+{generated_sql}
+
+Results ({query_result['row_count']} rows):
+{result_data}
+
+Please provide a clear, natural language answer to the user's question based on these results. Be concise and informative."""
+        
+        # Use the same model that worked for SQL generation, with retry logic
+        summary_response = make_api_call_with_retry(model, summary_prompt)
+        result_text = summary_response.text
+        
+        # Convert markdown to HTML for better formatting
+        result_html = Markup(markdown.markdown(result_text, extensions=['fenced_code', 'tables', 'nl2br']))
+        
+        return jsonify({
+            'success': True,
+            'answer': result_html,
+            'sql': generated_sql,
+            'row_count': query_result['row_count']
+        })
+        
+    except Exception as e:
+        # Log the error for debugging
+        import traceback
+        print(f"Chatbot error: {e}")
+        print(traceback.format_exc())
+        return jsonify({'error': f'API error: {str(e)}'}), 500

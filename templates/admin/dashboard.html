@@ -470,4 +470,395 @@
     </div>
     {% endif %}
 </div>
+
+<!-- AI Chatbot - Floating Widget -->
+<div id="chatbotWidget" class="chatbot-widget">
+    <!-- Chat Window -->
+    <div id="chatbotWindow" class="chatbot-window" style="display: none;">
+        <div class="chatbot-header">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-robot me-2"></i>
+                <div>
+                    <h6 class="mb-0">Admin Assistant</h6>
+                    <small class="text-muted">Always here to help</small>
+                </div>
+            </div>
+            <div class="chatbot-header-actions">
+                <button type="button" class="btn btn-sm btn-link text-white p-1" id="chatbotMinimize" title="Minimize">
+                    <i class="bi bi-dash-lg"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-link text-white p-1" id="chatbotClose" title="Close">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        </div>
+        <div class="chatbot-body">
+            <div id="chatbotMessages" class="chatbot-messages">
+                <div class="text-muted text-center py-3">
+                    <i class="bi bi-chat-dots"></i> Ask a question to get started...
+                </div>
+            </div>
+            <div id="chatbotError" class="alert alert-danger m-2" style="display: none;"></div>
+        </div>
+        <div class="chatbot-footer">
+            <div class="input-group">
+                <input type="text" class="form-control" id="chatbotInput" placeholder="Ask me anything..." aria-label="Chatbot question">
+                <button class="btn btn-primary" type="button" id="chatbotSubmit">
+                    <i class="bi bi-send"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Floating Button -->
+    <button id="chatbotToggle" class="chatbot-toggle-btn" type="button" title="Open Admin Assistant">
+        <i class="bi bi-robot"></i>
+    </button>
+</div>
+
+<style>
+    /* Floating Chatbot Widget */
+    .chatbot-widget {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1050;
+    }
+    
+    /* Floating Toggle Button */
+    .chatbot-toggle-btn {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .chatbot-toggle-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .chatbot-toggle-btn:active {
+        transform: scale(0.95);
+    }
+    
+    /* Chat Window */
+    .chatbot-window {
+        position: absolute;
+        bottom: 80px;
+        right: 0;
+        width: 380px;
+        height: 500px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        animation: slideUp 0.3s ease;
+    }
+    
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .chatbot-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .chatbot-header h6 {
+        color: white;
+        font-weight: 600;
+    }
+    
+    .chatbot-header-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .chatbot-header-actions .btn-link {
+        color: white;
+        text-decoration: none;
+        opacity: 0.8;
+        transition: opacity 0.2s;
+    }
+    
+    .chatbot-header-actions .btn-link:hover {
+        opacity: 1;
+    }
+    
+    .chatbot-body {
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        background: #f8f9fa;
+    }
+    
+    .chatbot-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .chatbot-footer {
+        padding: 1rem;
+        background: white;
+        border-top: 1px solid #dee2e6;
+    }
+    
+    /* Message Styles */
+    .chatbot-message {
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        max-width: 85%;
+        word-wrap: break-word;
+    }
+    
+    .chatbot-message.user {
+        background: #e7f3ff;
+        border-left: 3px solid #0d6efd;
+        align-self: flex-end;
+        margin-left: auto;
+    }
+    
+    .chatbot-message.assistant {
+        background: white;
+        border-left: 3px solid #6c757d;
+        align-self: flex-start;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .chatbot-message .message-header {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        opacity: 0.7;
+    }
+    
+    .chatbot-message .message-content {
+        line-height: 1.6;
+        font-size: 0.9rem;
+    }
+    
+    .chatbot-message .message-content p {
+        margin-bottom: 0.5rem;
+    }
+    
+    .chatbot-message .message-content p:last-child {
+        margin-bottom: 0;
+    }
+    
+    .chatbot-message .sql-query {
+        margin-top: 0.75rem;
+        padding: 0.75rem;
+        background: #2d2d2d;
+        color: #f8f8f2;
+        border-radius: 0.375rem;
+        font-family: 'Courier New', monospace;
+        font-size: 0.8rem;
+        overflow-x: auto;
+    }
+    
+    .chatbot-message .sql-query code {
+        color: #f8f8f2;
+        background: transparent;
+        padding: 0;
+    }
+    
+    .chatbot-message .sql-query small {
+        color: #aaa;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Responsive */
+    @media (max-width: 576px) {
+        .chatbot-window {
+            width: calc(100vw - 40px);
+            right: 20px;
+            left: 20px;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chatbotWidget = document.getElementById('chatbotWidget');
+    const chatbotWindow = document.getElementById('chatbotWindow');
+    const chatbotToggle = document.getElementById('chatbotToggle');
+    const chatbotMinimize = document.getElementById('chatbotMinimize');
+    const chatbotClose = document.getElementById('chatbotClose');
+    const chatbotInput = document.getElementById('chatbotInput');
+    const chatbotSubmit = document.getElementById('chatbotSubmit');
+    const chatbotMessages = document.getElementById('chatbotMessages');
+    const chatbotError = document.getElementById('chatbotError');
+    
+    let isOpen = false;
+    
+    // Toggle chatbot window
+    function openChatbot() {
+        chatbotWindow.style.display = 'flex';
+        chatbotToggle.style.display = 'none';
+        isOpen = true;
+        chatbotInput.focus();
+    }
+    
+    function closeChatbot() {
+        chatbotWindow.style.display = 'none';
+        chatbotToggle.style.display = 'flex';
+        isOpen = false;
+    }
+    
+    function minimizeChatbot() {
+        closeChatbot();
+    }
+    
+    // Event listeners for toggle buttons
+    chatbotToggle.addEventListener('click', openChatbot);
+    chatbotMinimize.addEventListener('click', minimizeChatbot);
+    chatbotClose.addEventListener('click', closeChatbot);
+    
+    // Auto-scroll to bottom of messages
+    function scrollToBottom() {
+        chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+    }
+    
+    // Add message to chat
+    function addMessage(role, content, sql = null) {
+        // Clear "get started" message if present
+        const placeholder = chatbotMessages.querySelector('.text-muted.text-center');
+        if (placeholder) {
+            chatbotMessages.innerHTML = '';
+        }
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `chatbot-message ${role}`;
+        
+        const header = document.createElement('div');
+        header.className = 'message-header';
+        header.textContent = role === 'user' ? 'You' : 'AI Assistant';
+        
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'message-content';
+        if (role === 'assistant') {
+            contentDiv.innerHTML = content;
+        } else {
+            contentDiv.textContent = content;
+        }
+        
+        messageDiv.appendChild(header);
+        messageDiv.appendChild(contentDiv);
+        
+        if (sql && role === 'assistant') {
+            const sqlDiv = document.createElement('div');
+            sqlDiv.className = 'sql-query';
+            sqlDiv.innerHTML = '<small>SQL Query:</small><br><code>' + escapeHtml(sql) + '</code>';
+            messageDiv.appendChild(sqlDiv);
+        }
+        
+        chatbotMessages.appendChild(messageDiv);
+        scrollToBottom();
+    }
+    
+    // Escape HTML to prevent XSS
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // Handle submit
+    function handleSubmit() {
+        const question = chatbotInput.value.trim();
+        if (!question) return;
+        
+        // Open chatbot if closed
+        if (!isOpen) {
+            openChatbot();
+        }
+        
+        // Hide error
+        chatbotError.style.display = 'none';
+        
+        // Add user message
+        addMessage('user', question);
+        
+        // Clear input
+        chatbotInput.value = '';
+        
+        // Disable input and button
+        chatbotInput.disabled = true;
+        chatbotSubmit.disabled = true;
+        chatbotSubmit.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+        
+        // Make API request
+        fetch('{{ url_for("admin.chatbot_query") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ question: question })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                let errorMsg = data.error;
+                if (data.sql) {
+                    errorMsg += '\n\nGenerated SQL:\n' + data.sql;
+                }
+                chatbotError.textContent = errorMsg;
+                chatbotError.style.display = 'block';
+                chatbotError.style.whiteSpace = 'pre-wrap';
+            } else {
+                addMessage('assistant', data.answer, data.sql);
+            }
+        })
+        .catch(error => {
+            chatbotError.textContent = 'An error occurred: ' + error.message;
+            chatbotError.style.display = 'block';
+        })
+        .finally(() => {
+            // Re-enable input and button
+            chatbotInput.disabled = false;
+            chatbotSubmit.disabled = false;
+            chatbotSubmit.innerHTML = '<i class="bi bi-send"></i>';
+            chatbotInput.focus();
+        });
+    }
+    
+    // Event listeners
+    chatbotSubmit.addEventListener('click', handleSubmit);
+    chatbotInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            handleSubmit();
+        }
+    });
+});
+</script>
 {% endblock %}

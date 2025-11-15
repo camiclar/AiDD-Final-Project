@@ -79,4 +79,14 @@
 ## Profile Pictures
 - Tool: Cursor
 - Prompt: Great. Now can you add uploading a profile picture as a feature? So both when the user signs up for a new account and editing their profile, they should get the option to upload a profile picutre.
-- Outcome: 
+- Outcome: Cursor successfully implemented uploading profile pictures and I kept its solution.
+
+## Adding an AI Admin Assistant
+- Tool: Cursor & Google AI Studio
+- Prompt: A new folder has been added to your context at docs\context\shared\GEMINI_DRIVEN_WEBSITE. This is a demo of a website in which a user can write in natural language and the Google Gemini API can translate the user's request into SQL which will then pull database results, producing a human-readable output. As an example, a user could type "What were the top 3 selling products over the last year", and the site would analyze database data and produce an answer. I want to implement something similar for the Campus Resource Hub. What I'm imagining is a little chatbot on the admin dashboard that would allow admins to ask questions about usage of resources. So things like "What time of day do most resources get booked for?" I'm not totally sure about how the API key piece of this would work. I got a free API key for Google Gemini that could probably be used for this. The thing is, I want to avoid uploading my API key to the GitHub repo, but I also want to deploy this webiste on the web. Is there a way to store the API key in this project so the site can be published on the web with the chatbot being functional, while avoiding uploading my API key to GitHub?
+- Outcome: Cursor used the Gemini Demo site as a reference to create a new natural language analytics assistant on the admin panel. It took multiple iterations and some experimenting with API keys to get it to work, but I kept most of the original functionality that Cursor created.
+
+## Updating Interface for AI Assistant
+- Tool: Cursor & Figma Make
+- Prompt: Okay this looks great! Now I want to adjust the layout a bit. So currently, the Analytics Assistant is in an accordion at the bottom of the page. I want it to show up more like a typical chatbot. So start out as a little floating circle on the bottom right of the screen. The circle should have the the robot icon in it. Then when the user clicks on the circle, it should expand into a small-ish window still on the bottom right with the option to collapse it back down to the circle. I've attached a screenshot of an updated version of the prototype with this layout.
+- Outcome: Cursor used the Figma Make interface and my description to create a more typical chatbot interface for the AI assistant. I kept its solution.

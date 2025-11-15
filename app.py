@@ -4,6 +4,10 @@ from flask_login import LoginManager
 from src.database import init_db
 from src.models import User
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 def create_app():
     """Create and configure the Flask application."""
